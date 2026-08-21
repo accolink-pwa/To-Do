@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Weekly Grind Sheet</title>
+<meta name="theme-color" content="#0B2B2B">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Grind Sheet">
+<style>
+  :root{
+    --bg:#0B2B2B; --card:#123B3B; --teal:#0FBFA8; --teal-dark:#0A8A78;
+    --cream:#F4F1E8; --coral:#FF6B5E; --gold:#FFC857; --lilac:#B9A6FF;
+    --sky:#6EC6FF; --green:#8BE29B; --muted:#9FCFC7; --white:#FFFFFF;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--cream);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    overscroll-behavior-y:contain;}
+  .topbar{position:sticky;top:0;z-index:10;background:var(--teal);color:var(--bg);
+    padding:14px 18px calc(14px + env(safe-area-inset-top)) 18px;padding-top:calc(14px + env(safe-area-inset-top));
+    display:flex;justify-content:space-between;align-items:center;}
+  .topbar h1{font-size:17px;margin:0;font-weight:800;letter-spacing:0.3px;}
+  .topbar .reset{background:var(--bg);color:var(--teal);border:none;border-radius:20px;
+    padding:7px 14px;font-size:12px;font-weight:700;}
+  .wrap{max-width:520px;margin:0 auto;padding:16px 14px 90px 14px;}
+  .subtitle{color:var(--muted);font-size:12.5px;margin:10px 2px 16px 2px;}
+  .legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .chip{display:flex;align-items:center;gap:6px;background:var(--card);
+    border-radius:20px;padding:6px 12px;font-size:11px;color:var(--muted);}
+  .chip .dot{width:9px;height:9px;border-radius:50%;}
+  .day-card{background:var(--card);border-radius:16px;margin-bottom:14px;
+    overflow:hidden;border-left:6px solid var(--teal);transition:transform .12s;}
+  .day-card.today{box-shadow:0 0 0 2px var(--teal) inset;}
+  .day-head{padding:14px 16px 8px 16px;}
+  .day-head .day-name{font-size:15px;font-weight:800;letter-spacing:0.4px;}
+  .day-head .module{font-size:14px;font-weight:700;color:var(--white);margin-top:3px;}
+  .day-head .meta{font-size:11px;color:var(--muted);margin-top:2px;}
+  .items{padding:6px 16px 14px 16px;}
+  .item{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:13px;
+    cursor:pointer;user-select:none;}
+  .box{width:22px;height:22px;min-width:22px;border-radius:6px;border:2px solid var(--muted);
+    display:flex;align-items:center;justify-content:center;transition:all .15s;}
+  .box.checked{background:var(--teal);border-color:var(--teal);}
+  .box svg{width:13px;height:13px;opacity:0;transition:opacity .1s;}
+  .box.checked svg{opacity:1;}
+  .item span{transition:opacity .15s, text-decoration .15s;}
+  .item.done span{opacity:0.55;text-decoration:line-through;}
+  .score-card{background:var(--teal);color:var(--bg);border-radius:16px;padding:18px 16px;
+    margin-top:6px;}
+  .score-card h2{margin:0 0 4px 0;font-size:15px;font-weight:800;}
+  .score-card p{margin:0 0 12px 0;font-size:12px;opacity:0.85;}
+  .streak-row{display:flex;gap:6px;justify-content:space-between;}
+  .streak-day{flex:1;text-align:center;}
+  .streak-box{width:100%;aspect-ratio:1;max-width:38px;margin:0 auto 4px auto;
+    border-radius:8px;background:rgba(11,43,43,0.15);display:flex;align-items:center;
+    justify-content:center;font-weight:800;font-size:12px;border:2px solid rgba(11,43,43,0.25);}
+  .streak-box.full{background:var(--bg);color:var(--teal);}
+  .streak-label{font-size:10px;font-weight:700;}
+  .footer-note{text-align:center;color:var(--muted);font-size:11px;margin-top:18px;
+    font-style:italic;}
+  .install-hint{background:var(--card);border-radius:12px;padding:10px 14px;font-size:11.5px;
+    color:var(--muted);margin-bottom:16px;display:none;}
+  .install-hint.show{display:block;}
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <h1>Weekly Grind Sheet</h1>
+    <button class="reset" id="resetBtn">Reset week</button>
+  </div>
+  <div class="wrap">
+    <div class="subtitle">5 modules + learner's licence \u2014 1hr each, every day.</div>
+    <div class="install-hint" id="installHint">
+      Tip: tap your browser's menu &rarr; "Add to Home Screen" to get this as an app icon.
+    </div>
+    <div class="legend">
+      <div class="chip"><span class="dot" style="background:var(--teal)"></span>Module study</div>
+      <div class="chip"><span class="dot" style="background:var(--coral)"></span>Driving licence</div>
+      <div class="chip"><span class="dot" style="background:var(--gold)"></span>Class attendance</div>
+    </div>
+    <div id="days"></div>
+    <div class="score-card">
+      <h2>This week's score</h2>
+      <p>Filled both boxes for the day = it lights up.</p>
+      <div class="streak-row" id="streakRow"></div>
+    </div>
+    <div class="footer-note">WaaS \u2014 keep building, keep studying. One hour a day, every day.</div>
+  </div>
+
+<script>
+const DATA = [
+  {key:"mon", day:"MONDAY", accent:"var(--coral)", module:"Principles of Entrepreneurship", meta:"CBM1103 \u00b7 Mrs Mogae \u00b7 TR2", venue:"TR2"},
+  {key:"tue", day:"TUESDAY", accent:"var(--gold)", module:"Principles of Bookkeeping & Accounting", meta:"CBM1202 \u00b7 Mr R Njanji \u00b7 TR3", venue:"TR3"},
+  {key:"wed", day:"WEDNESDAY", accent:"var(--sky)", module:"Principles of Business Management I", meta:"CBM1102 \u00b7 Ms Bunu \u00b7 TR3", venue:"TR3"},
+  {key:"thu", day:"THURSDAY", accent:"var(--lilac)", module:"Computer Skills", meta:"CRE1203 \u00b7 Ms Small \u00b7 TR2", venue:"TR2"},
+  {key:"fri", day:"FRIDAY", accent:"var(--teal)", module:"Communication Skills", meta:"CRE1104 \u00b7 Ms Chasha \u00b7 TR2", venue:"TR2"},
+  {key:"sat", day:"SATURDAY", accent:"var(--green)", module:"Foundation in Quantitative Methods", meta:"FQM0102 \u00b7 Mr Muchingami \u00b7 TR2", venue:"TR2"},
+  {key:"sun", day:"SUNDAY", accent:"var(--muted)", module:null, meta:"No lecture \u2014 catch up day", venue:null},
+];
+
+function weekId(){
+  const d = new Date();
+  const onejan = new Date(d.getFullYear(),0,1);
+  const week = Math.ceil((((d - onejan) / 86400000) + onejan.getDay()+1)/7);
+  return d.getFullYear()+"-W"+week;
+}
+const STORAGE_KEY = "grindsheet_"+weekId();
+
+function loadState(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveState(state){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+let state = loadState();
+
+function todayKey(){
+  const idx = new Date().getDay(); // 0=Sun
+  const map = ["sun","mon","tue","wed","thu","fri","sat"];
+  return map[idx];
+}
+
+function itemsFor(d){
+  const items = [];
+  if(d.module){
+    items.push({id:"study", label:"Study 1hr: "+d.module.split(" ")[0]+"... module", color:"var(--teal)"});
+  } else {
+    items.push({id:"study", label:"Review the week's 5 modules \u2014 fill gaps", color:"var(--teal)"});
+  }
+  items.push({id:"driving", label:"Learner's licence: 1hr road rules / signs", color:"var(--coral)"});
+  if(d.venue){
+    items.push({id:"class", label:"Attend class \u2013 "+d.venue+" today", color:"var(--gold)"});
+  } else {
+    items.push({id:"rest", label:"Rest properly \u2014 you've earned it", color:"var(--muted)"});
+  }
+  return items;
+}
+
+function checkSvg(){
+  return '<svg viewBox="0 0 24 24" fill="none"><path d="M4 12l6 6L20 6" stroke="#0B2B2B" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+
+function render(){
+  const container = document.getElementById("days");
+  container.innerHTML = "";
+  const tKey = todayKey();
+  DATA.forEach(d=>{
+    const card = document.createElement("div");
+    card.className = "day-card" + (d.key===tKey ? " today":"");
+    card.style.borderLeftColor = d.accent;
+
+    const head = document.createElement("div");
+    head.className = "day-head";
+    head.innerHTML = `<div class="day-name" style="color:${d.accent}">${d.day}${d.key===tKey?' \u2022 TODAY':''}</div>` +
+      (d.module ? `<div class="module">${d.module}</div><div class="meta">${d.meta}</div>` : `<div class="meta">${d.meta}</div>`);
+    card.appendChild(head);
+
+    const itemsWrap = document.createElement("div");
+    itemsWrap.className = "items";
+    itemsFor(d).forEach(it=>{
+      const row = document.createElement("div");
+      const checked = !!(state[d.key] && state[d.key][it.id]);
+      row.className = "item" + (checked ? " done":"");
+      row.innerHTML = `<div class="box ${checked?'checked':''}" style="border-color:${it.color}; background:${checked?it.color:'transparent'}">${checkSvg()}</div><span>${it.label}</span>`;
+      row.addEventListener("click", ()=>{
+        state[d.key] = state[d.key] || {};
+        state[d.key][it.id] = !state[d.key][it.id];
+        saveState(state);
+        render();
+      });
+      itemsWrap.appendChild(row);
+    });
+    card.appendChild(itemsWrap);
+    container.appendChild(card);
+  });
+
+  renderStreak();
+}
+
+function dayComplete(d){
+  const s = state[d.key];
+  if(!s) return false;
+  const ids = itemsFor(d).map(i=>i.id);
+  return ids.every(id => s[id]);
+}
+
+function renderStreak(){
+  const row = document.getElementById("streakRow");
+  row.innerHTML = "";
+  const labels = {mon:"M",tue:"T",wed:"W",thu:"T",fri:"F",sat:"S",sun:"S"};
+  DATA.forEach(d=>{
+    const complete = dayComplete(d);
+    const cell = document.createElement("div");
+    cell.className = "streak-day";
+    cell.innerHTML = `<div class="streak-box ${complete?'full':''}">${complete?'\u2713':''}</div><div class="streak-label">${labels[d.key]}</div>`;
+    row.appendChild(cell);
+  });
+}
+
+document.getElementById("resetBtn").addEventListener("click", ()=>{
+  if(confirm("Clear all ticks for this week?")){
+    state = {};
+    saveState(state);
+    render();
+  }
+});
+
+// Show install hint if not already installed (standalone)
+if(!window.matchMedia('(display-mode: standalone)').matches){
+  document.getElementById("installHint").classList.add("show");
+}
+
+// Register service worker for offline use
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+render();
+</script>
+</body>
+</html>
